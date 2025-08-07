@@ -9,13 +9,17 @@ from email.mime.text import MIMEText
 # Load Zero-Shot Classifier (more reliable output parsing)
 from transformers import pipeline
 
-from transformers import pipeline
 
-classifier = pipeline(
-    "zero-shot-classification",
-    model="facebook/bart-large-mnli",
-    device_map="auto",
-    trust_remote_code=True  # <--- Add this
+
+classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+
+result = classifier(
+    "This is a fake news article about elections.",
+    candidate_labels=["real", "fake"]
+)
+
+print(result)
+
 
 )
 
@@ -112,4 +116,5 @@ if st.button("Download Logs"):
     df = pd.DataFrame(st.session_state.log)
     df.to_csv("log.csv", index=False)
     st.success("Logs downloaded as log.csv")
+
 

@@ -21,7 +21,7 @@ result = classifier(
 print(result)
 
 
-)
+
 
 
 # Session State
@@ -116,5 +116,6 @@ if st.button("Download Logs"):
     df = pd.DataFrame(st.session_state.log)
     df.to_csv("log.csv", index=False)
     st.success("Logs downloaded as log.csv")
+
 
 

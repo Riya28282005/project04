@@ -7,12 +7,16 @@ from transformers import pipeline
 import smtplib
 from email.mime.text import MIMEText
 
-# Load AI Classifier
-@st.cache_resource
-def load_model():
-    return pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+# Lazy load model: Initially None
+classifier = None
 
-classifier = load_model()
+def get_classifier():
+    """Load the AI model only when needed."""
+    global classifier
+    if classifier is None:
+        with st.spinner("🔄 Loading AI Model... Please wait..."):
+            classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+    return classifier
 
 # Session State Initialization
 if "log" not in st.session_state:
@@ -63,9 +67,10 @@ if st.button("🔍 Check Now"):
     if not text_input.strip():
         st.warning("⚠️ Please enter some text.")
     else:
+        clf = get_classifier()  # Load model only when needed
         with st.spinner("🧠 Analyzing with AI..."):
             labels = ["real news", "fake news"]
-            result = classifier(text_input, candidate_labels=labels)
+            result = clf(text_input, candidate_labels=labels)
             predicted_label = result["labels"][0]
             predicted_score = dict(zip(result["labels"], result["scores"]))[predicted_label] * 100
 

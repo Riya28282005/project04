@@ -7,9 +7,6 @@ from transformers import pipeline
 import smtplib
 from email.mime.text import MIMEText
 
-# Dynamically set port for Render
-port = int(os.environ.get("PORT", 8501))
-
 # Load AI Classifier
 @st.cache_resource
 def load_model():
@@ -80,7 +77,6 @@ if st.button("🔍 Check Now"):
                     f"⚠️ Fake News Detected!\n\nText: {text_input}\nConfidence: {predicted_score:.2f}%"
                 )
 
-            # Save to log
             st.session_state.log.append({
                 "text": text_input,
                 "label": predicted_label,
@@ -99,7 +95,7 @@ for word, freq in keyword_freq.most_common(10):
 if st.session_state.log:
     st.write("---")
     st.subheader("📁 Past Predictions")
-    for item in reversed(st.session_state.log[-5:]):  # show last 5
+    for item in reversed(st.session_state.log[-5:]):  
         st.markdown(f"📰 **Text:** {item['text'][:100]}...")
         st.markdown(f"🧠 **Prediction:** `{item['label']}` | 💯 **Confidence:** `{item['confidence']}%`")
         st.markdown("---")
@@ -134,6 +130,6 @@ if st.button("📥 Download Logs"):
     df.to_csv("log.csv", index=False)
     st.success("📁 Logs downloaded as `log.csv`")
 
-# Final Note
+# Footer
 st.markdown("---")
 st.caption("Made with ❤️ by Riya , Shivani , Liesha for Puch AI Hackathon")

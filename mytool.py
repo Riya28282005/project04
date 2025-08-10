@@ -1,13 +1,21 @@
-import streamlit as st
-from transformers import pipeline
-from collections import Counter
-import pandas as pd
+import os
 import re
+import pandas as pd
+import streamlit as st
+from collections import Counter
+from transformers import pipeline
 import smtplib
 from email.mime.text import MIMEText
 
+# Dynamically set port for Render
+port = int(os.environ.get("PORT", 8501))
+
 # Load AI Classifier
-classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+@st.cache_resource
+def load_model():
+    return pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
+
+classifier = load_model()
 
 # Session State Initialization
 if "log" not in st.session_state:
@@ -18,27 +26,31 @@ if "ratings" not in st.session_state:
     st.session_state.ratings = []
 
 # Predefined Trending Topics
-predefined_keywords = ["elections", "government", "health", "technology", "AI", "economy", "COVID", "sports", "education", "climate"]
+predefined_keywords = [
+    "elections", "government", "health", "technology",
+    "AI", "economy", "COVID", "sports", "education", "climate"
+]
 
 # Helper Functions
 def extract_keywords(text):
-    words = re.findall(r"\b\w{4,}\b", text.lower())
-    return words
+    return re.findall(r"\b\w{4,}\b", text.lower())
 
 def send_email_alert(message):
     try:
-        sender = "your_email@gmail.com"
-        password = "your_app_password"
-        receiver = "admin_email@gmail.com"
+        sender = os.environ.get("ALERT_EMAIL_SENDER", "your_email@gmail.com")
+        password = os.environ.get("ALERT_EMAIL_PASSWORD", "your_app_password")
+        receiver = os.environ.get("ALERT_EMAIL_RECEIVER", "admin_email@gmail.com")
+
         msg = MIMEText(message)
         msg["Subject"] = "⚠️ High Confidence Fake News Alert"
         msg["From"] = sender
         msg["To"] = receiver
+
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
             server.login(sender, password)
             server.sendmail(sender, receiver, msg.as_string())
     except Exception as e:
-        print("Email alert failed:", e)
+        st.error(f"Email alert failed: {e}")
 
 # UI Setup
 st.set_page_config(page_title="TruthLens AI", layout="centered", page_icon="🧠")
@@ -64,7 +76,9 @@ if st.button("🔍 Check Now"):
             st.success(f"🔎 **Prediction:** `{predicted_label.upper()}`  \n📊 **Confidence:** `{predicted_score:.2f}%`")
 
             if predicted_label == "fake news" and predicted_score > 90:
-                send_email_alert(f"⚠️ Fake News Detected!\n\nText: {text_input}\nConfidence: {predicted_score:.2f}%")
+                send_email_alert(
+                    f"⚠️ Fake News Detected!\n\nText: {text_input}\nConfidence: {predicted_score:.2f}%"
+                )
 
             # Save to log
             st.session_state.log.append({
@@ -109,7 +123,7 @@ st.write("---")
 st.subheader("📊 Usage Insights")
 st.write(f"🧮 **Total Checks:** {len(st.session_state.log)}")
 if st.session_state.ratings:
-    avg_rating = sum(st.session_state.ratings)/len(st.session_state.ratings)
+    avg_rating = sum(st.session_state.ratings) / len(st.session_state.ratings)
     st.write(f"⭐ **Average Rating:** {avg_rating:.2f}")
 else:
     st.write("⭐ No ratings yet.")
@@ -122,5 +136,4 @@ if st.button("📥 Download Logs"):
 
 # Final Note
 st.markdown("---")
-st.caption(" Made with ❤️ by Riya , Shivani , Liesha for Puch AI Hackathon")
-
+st.caption("Made with ❤️ by Riya , Shivani , Liesha for Puch AI Hackathon")

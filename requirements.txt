@@ -4,3 +4,6 @@ transformers==4.31.0
 torch 
 pandas 
 gunicorn
+transformers==4.31.0
+tokenizers==0.13.3 --only-binary=:all:
+
